@@ -1,5 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
+import './tailwind.css'; 
+import GamePage from './components/GamePage';
 
 function App() {
   return (
@@ -9,14 +11,7 @@ function App() {
         <p>
           Hello from vignesh
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <GamePage />
       </header>
     </div>
   );
