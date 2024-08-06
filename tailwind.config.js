@@ -1,10 +1,15 @@
+// tailwind.config.js
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
-    "./public/index.html",
+    // Add paths to any other files that use Tailwind CSS
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        dancing: ['Dancing Script', 'cursive'],
+      },
+    },
   },
   plugins: [],
-}
+};
