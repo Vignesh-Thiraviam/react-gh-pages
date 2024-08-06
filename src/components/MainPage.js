@@ -1,5 +1,6 @@
 // MainPage.js
 import React, { useEffect, useState, useRef } from 'react';
+import ClipLoader from 'react-spinners/ClipLoader';
 
 const MainPage = () => {
   const [selectedPlayer, setSelectedPlayer] = useState('');
@@ -9,21 +10,11 @@ const MainPage = () => {
   const [minutesElapsed, setMinutesElapsed] = useState(0);
   const [averageScore, setAverageScore] = useState(0);
   const [clicked, setClicked] = useState(false);
+  const [loading, setLoading] = useState(false);
   const timeoutRef = useRef(null);
 
 
   useEffect(() => {
-    // Function to fetch data from the API
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints');
-        const data = await response.json();
-        setPlayerCards(data);
-        calculateAverageScore(data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
 
     // Initial fetch
     fetchData();
@@ -34,6 +25,19 @@ const MainPage = () => {
     // Clear the interval when the component is unmounted
     return () => clearInterval(intervalId);
   }, []);
+
+      // Function to fetch data from the API
+  const fetchData = async () => {
+    try {
+      const getResponse = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints');
+      const newData = await getResponse.json();
+      setPlayerCards(newData);
+      calculateAverageScore(newData); // Assuming calculateAverageScore is defined elsewhere
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+    }
+  };
 
   useEffect(() => {
     const playerString = localStorage.getItem('selectedPlayer');
@@ -138,54 +142,39 @@ const MainPage = () => {
 
   // reset the points activated by SM
   const resetStoryPointsForNewStory = async () => {
-
     if (!clicked) {
-        setClicked(true);
-        console.log('Reset story point clicked!');
-        
-            const payload = 
-            { 
-                allPlayers : playerCards
-            };
+      setClicked(true);
+      setLoading(true);
+      console.log('Reset story point clicked!');
 
-            try {
-                const response = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints/updateAll', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-                });
-        
-                if (!response.ok) {
-                throw new Error('Network response was not ok');
-                }
-            
-                // Handle the response or update state if needed
-            } catch (error) {
-                console.error('Error:', error);
-            }
-            console.log("Update completed ");
-            try {
-                console.log("Get after update ");
-                const getResponse = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints');
-                const newData = await getResponse.json();
-                console.log("Post update ");
-                console.log(newData);
-                setPlayerCards(newData);
-                calculateAverageScore(newData);
-              } catch (error) {
-                console.error('Error fetching data:', error);
-              }
-        
+      const payload = { allPlayers: playerCards };
+
+      try {
+        const response = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints/updateAll', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        await fetchData(); // Ensure fetchData completes before setting loading to false
+        setLoading(false);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
         timeoutRef.current = setTimeout(() => {
           setClicked(false);
         }, 10000); // 10 seconds
-      } else {
-        console.log('Second click ignored');
       }
-
-  }
+    } else {
+      console.log('Second click ignored');
+    }
+  };
 
   return (
     <div className="w-full h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-4 text-white">
@@ -256,21 +245,28 @@ const MainPage = () => {
             </div>
 
           {/* Display player cards */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {playerCards.map((playerCard) => (
-                <div
-                key={playerCard.id}
-                className="bg-white text-gray-900 p-6 rounded-lg shadow-md flex items-center justify-center text-xl font-bold"
-                >
-                {playerCard.playerName}: 
-                {playerCard.selectedPoints === 0 ? (
-                    <span className="ml-2 text-gray-500">🔄 Pending</span>
-                ) : (
-                    <span className="ml-2">{playerCard.selectedPoints}</span>
-                )}
+          { loading ? ( <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" >
+                <div className="flex items-center justify-center h-full">
+                <ClipLoader color="#ffffff" loading={loading} size={150} />
                 </div>
-            ))}
-            </div>
+          </div>) :     
+          
+          (<div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {playerCards.map((playerCard) => (
+                    <div
+                    key={playerCard.id}
+                    className="bg-white text-gray-900 p-6 rounded-lg shadow-md flex items-center justify-center text-xl font-bold"
+                    >
+                    {playerCard.playerName}:
+                    {playerCard.selectedPoints === 0 ? (
+                        <span className="ml-2 text-gray-500">🔄 Pending</span>
+                    ) : (
+                        <span className="ml-2">{playerCard.selectedPoints}</span>
+                    )}
+                    </div>
+                ))}
+            </div> )}
+
         </div>
       )}
 
