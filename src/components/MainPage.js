@@ -1,8 +1,15 @@
 // MainPage.js
 import React, { useEffect, useState, useRef } from 'react';
 import ClipLoader from 'react-spinners/ClipLoader';
+import PlayerInfo from './PlayerInfo';
+import { useSelector } from 'react-redux';
+import Comments from './Comment';
+import CommentsFeed from './CommentsFeed';
+
+
 
 const MainPage = () => {
+  const apiUrl = process.env.REACT_APP_API_URL;
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [selectedCard, setSelectedCard] = useState('😶');
   const [playerCards, setPlayerCards] = useState([ ]);
@@ -11,8 +18,11 @@ const MainPage = () => {
   const [averageScore, setAverageScore] = useState(0);
   const [clicked, setClicked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showAllData, setShowAllData] = useState(false);
   const timeoutRef = useRef(null);
 
+  const reduxPlayer = useSelector((state) => state.players.player);
+  console.log("Redux player " + JSON.stringify(reduxPlayer));
 
   useEffect(() => {
 
@@ -29,7 +39,7 @@ const MainPage = () => {
       // Function to fetch data from the API
   const fetchData = async () => {
     try {
-      const getResponse = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints');
+      const getResponse = await fetch(`${apiUrl}/api/playerpoints`);
       const newData = await getResponse.json();
       setPlayerCards(newData);
       calculateAverageScore(newData); // Assuming calculateAverageScore is defined elsewhere
@@ -86,7 +96,7 @@ const MainPage = () => {
          };
 
       try {
-        const response = await fetch(`https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints/${payload.id}`, {
+        const response = await fetch(`${apiUrl}/api/playerpoints/${payload.id}`, {
           method: 'PUT', // Change the method to PUT
           headers: {
             'Content-Type': 'application/json',
@@ -145,12 +155,13 @@ const MainPage = () => {
     if (!clicked) {
       setClicked(true);
       setLoading(true);
+      setShowAllData(false);
       console.log('Reset story point clicked!');
 
       const payload = { allPlayers: playerCards };
 
       try {
-        const response = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints/updateAll', {
+        const response = await fetch(`${apiUrl}/api/playerpoints/updateAll`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -176,16 +187,16 @@ const MainPage = () => {
     }
   };
 
+  const handleUpdatePlayer = (newPlayerName) => {
+    setSelectedPlayer(newPlayerName);
+  };
+
   return (
     <div className="w-full h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-4 text-white">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Main Page</h1>
-        {selectedPlayer && (
-          <p className="text-lg bg-white text-gray-900 p-2 rounded-lg">
-            Selected Player: {selectedPlayer}
-          </p>
-        )}
-      </div>
+    <div className="flex justify-between items-center">
+      <h1 className="text-2xl font-bold">Points Page</h1>
+      <PlayerInfo selectedPlayer={reduxPlayer} onUpdatePlayer={handleUpdatePlayer} />
+    </div>
 
       <div className="mt-8 flex justify-center">
         <div className="relative w-40 h-40">
@@ -219,6 +230,10 @@ const MainPage = () => {
               Selected Card: {selectedCard}
             </div>
           </div>
+          
+          <div className="mt-8 flex flex-col items-center">
+            <Comments selectedPlayer={reduxPlayer}/>
+          </div>
         </>
       ) : (
         <div>
@@ -226,14 +241,14 @@ const MainPage = () => {
           <div className="mt-8 p-4 bg-white text-gray-900 rounded-lg shadow-md flex flex-col items-center">
             <div className="flex justify-between w-full items-center">
                 <button
-                onClick={() => console.log('Show All Data clicked')}
+                onClick={() => setShowAllData(true)}
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-md text-xl font-bold"
                 >
                 Show All Data
                 </button>
                 <div className="bg-gray-100 p-4 rounded-lg shadow-md text-xl font-bold text-center">
                 Average Score
-                <div className="text-3xl text-blue-500 mt-2">{averageScore}</div>
+                <div className="text-3xl text-blue-500 mt-2">{showAllData ?averageScore : "🔄"}</div>
                 </div>
                 <button
                 onClick={() => resetStoryPointsForNewStory()}
@@ -261,7 +276,7 @@ const MainPage = () => {
                     {playerCard.selectedPoints === 0 ? (
                         <span className="ml-2 text-gray-500">🔄 Pending</span>
                     ) : (
-                        <span className="ml-2">{playerCard.selectedPoints}</span>
+                        <span className="ml-2">{showAllData ? playerCard.selectedPoints : "👍"}</span>
                     )}
                     </div>
                 ))}
@@ -269,6 +284,10 @@ const MainPage = () => {
 
         </div>
       )}
+
+      <div className="mt-8 flex justify-center rounded-2xl">
+        <CommentsFeed />
+      </div>
 
     </div>
   );

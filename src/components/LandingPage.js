@@ -3,17 +3,25 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClipLoader from 'react-spinners/ClipLoader';
 import headerImage from '../Pointsplanner.jpeg'; 
+import { useDispatch } from 'react-redux';
+import { setPlayer } from './utils/playerSlice';
+
+
 
 const LandingPage = () => {
+  const apiUrl = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
   const [players, setPlayers] = useState([ ]);
   const [loading, setLoading] = useState(true);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     // Function to fetch data from the API
     const fetchData = async () => {
       try {
-        const response = await fetch('https://helloworld-pbyrdyblka-nw.a.run.app/api/playerpoints');
+        // const response = await fetch('${apiUrl}/api/playerpoints');
+        const response = await fetch(`${apiUrl}/api/playerpoints`);
         const data = await response.json();
         // const allPlayerNames = data.map(player => player.playerName);
         // console.log(allPlayerNames);
@@ -29,27 +37,9 @@ const LandingPage = () => {
 
   }, []);
 
-  const players2 = [
-    'Player1',
-    'Player2',
-    'Player3',
-    'Player4',
-    'Player5',
-    'Player6',
-    'Player7',
-    'Player8',
-    'Player9',
-    'Player10',
-    'Player11',
-    'Player12',
-    'Player13',
-    'Player14',
-    'Player15',
-    'Scrum Master', // Added Scrum Master
-  ];
-
   const handlePlayerSelection = (player) => {
     localStorage.setItem('selectedPlayer', JSON.stringify(player));
+    dispatch(setPlayer(player));
     navigate('/main');
   };
 

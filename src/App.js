@@ -4,6 +4,8 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import MainPage from './components/MainPage';
 import ErrorPage from './components/ErrorPage';
+import { Provider } from 'react-redux';
+import appStore from './components/utils/appStore';
 
 
 const router = createBrowserRouter(
@@ -23,7 +25,10 @@ const router = createBrowserRouter(
 );
 
 const App = () => {
-  return <RouterProvider router={router} />;
+  return  ( 
+  <Provider store={appStore}>
+  <RouterProvider router={router} /> 
+  </Provider>);
 };
 
 export default App;
